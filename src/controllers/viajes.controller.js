@@ -209,10 +209,14 @@ export const listarViajes = async (req, res) => {
     const fechaFiltro = fecha || new Date().toISOString().split("T")[0];
 
     // construir query dinámico
-    let where = [`DATE(v.fecha) = $1`];
-    const params = [fechaFiltro];
-    let idx = 2;
-
+    let where = [];
+    const params = [];
+    let idx = 1;
+    
+    if (fecha && fecha.trim() !== "") {
+      where.push(`DATE(v.fecha) = $${idx++}`);
+      params.push(fecha);
+    }
     if (usuario_id) {
       where.push(`v.usuario_id = $${idx++}`);
       params.push(Number(usuario_id));
@@ -227,7 +231,7 @@ export const listarViajes = async (req, res) => {
       FROM viajes v
       LEFT JOIN usuarios u ON v.usuario_id = u.id
       LEFT JOIN clientes c ON v.cliente_id = c.id
-      ${where.length ? "WHERE " + where.join(" AND ") : ""}
+      ${where.length > 0 ? "WHERE " + where.join(" AND ") : ""}
       ORDER BY v.fecha DESC
     `;
 
