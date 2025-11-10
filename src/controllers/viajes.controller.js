@@ -157,18 +157,28 @@ export const editarViaje = async (req, res) => {
 export const listarViajesChofer = async (req, res) => {
   const usuario_id = req.user.id;
   const { fecha } = req.query;
-
+  
   try {
-    const result = await pool.query(
-      `SELECT v.*, u.nombre AS usuario_nombre, c.nombre AS cliente_nombre
+    let where = [`v.usuario_id = $1`];
+    const params = [usuario_id];
+    let idx = 2;
+
+    // ✅ Solo filtrar por fecha si se envía y NO está vacía
+    if (fecha && fecha.trim() !== "") {
+      where.push(`DATE(v.fecha) = $${idx++}`);
+      params.push(fecha);
+    }
+
+    const query = `
+      SELECT v.*, u.nombre AS usuario_nombre, c.nombre AS cliente_nombre
        FROM viajes v
        LEFT JOIN usuarios u ON v.usuario_id = u.id
        LEFT JOIN clientes c ON v.cliente_id = c.id
-       WHERE v.usuario_id = $1 AND DATE(v.fecha) = $2
-       ORDER BY v.fecha DESC`,
-      [usuario_id, fecha]
-    );
-
+       WHERE ${where.join(" AND ")}
+       ORDER BY v.fecha DESC
+      `;
+ /*     [usuario_id, fecha] */
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
