@@ -12,7 +12,15 @@ dotenv.config();
 const app = express();
 
 
-app.use(cors());
+/* app.use(cors()); */
+
+app.use(cors({
+  origin: ["https://mglogistica.com.uy"],
+  credentials: true
+}));
+
+
+
 app.use(express.json());
 
 // Rutas
