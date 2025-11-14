@@ -15,14 +15,13 @@ const app = express();
 /* app.use(cors()); */
 
 app.use(cors({
-  origin: ["https://mglogistica.com.uy"],
+  origin: ["https://www.mglogistica.com.uy"],
   credentials: true
 }));
 
 
 
 app.use(express.json());
-
 // Rutas
 app.use('/api/auth', authRoutes); //endpoint testeado y funcionando
 app.use('/api/usuarios', usuariosRoutes); //endpoint testeado y funcionando
