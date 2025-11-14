@@ -15,7 +15,7 @@ const app = express();
 /* app.use(cors()); */
 
 app.use(cors({
-  origin: ["https://www.mglogistica.com.uy"],
+  origin: ["https://mglogistica.com.uy"],
   credentials: true
 }));
 
