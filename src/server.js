@@ -11,22 +11,32 @@ import reportesRoutes from './routes/reportes.routes.js';
 dotenv.config();
 const app = express();
 
-
-/* app.use(cors()); */
-
-app.use(cors({
-  origin: ["https://mglogistica.com.uy/api"],
+/* app.use(cors({
+  origin: ["https://mglogistica.com.uy"],
   credentials: true
-}));
+})); */
+app.use((req, res, next) => {
+  console.log('➡️', req.method, req.path);
+  next();
+});
 
+const corsOptions = {
+  origin: "https://mglogistica.com.uy",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+app.use(cors(corsOptions));
 
+app.options('/.*/', cors(corsOptions));
 
 app.use(express.json());
+
 // Rutas
 app.use('/api/auth', authRoutes); //endpoint testeado y funcionando
 app.use('/api/usuarios', usuariosRoutes); //endpoint testeado y funcionando
 app.use('/api/clientes', clientesRoutes);//endpoint testeado y funcionando
-app.use('/api/viajes', viajesRoutes);//--e`dpoint testeado y funcionando
+app.use('/api/viajes', viajesRoutes);//--endpoint testeado y funcionando
 app.use('/api/reportes', reportesRoutes);//endpoint en desarrollo
 
 
