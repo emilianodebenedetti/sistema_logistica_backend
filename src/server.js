@@ -11,10 +11,6 @@ import reportesRoutes from './routes/reportes.routes.js';
 dotenv.config();
 const app = express();
 
-/* app.use(cors({
-  origin: ["https://mglogistica.com.uy"],
-  credentials: true
-})); */
 app.use((req, res, next) => {
   console.log('➡️', req.method, req.path);
   next();
