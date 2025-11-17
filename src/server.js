@@ -37,7 +37,7 @@ app.use('/api/reportes', reportesRoutes);//endpoint en desarrollo
 
 
 //iniciar el servidor 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
