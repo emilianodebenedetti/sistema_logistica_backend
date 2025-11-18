@@ -20,7 +20,7 @@ const corsOptions = {
   origin: "https://mglogistica.com.uy",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
 };
 app.use(cors(corsOptions));
 
