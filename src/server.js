@@ -20,7 +20,7 @@ const corsOptions = {
   origin: "https://mglogistica.com.uy",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
 
@@ -37,7 +37,7 @@ app.use('/api/reportes', reportesRoutes);//endpoint en desarrollo
 
 
 //iniciar el servidor 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
