@@ -25,7 +25,8 @@ const corsOptions = {
   origin: [
     /* "http://localhost:4000",
     "http://localhost:5173", */
-    "https://mglogistica.com.uy"  //descomentar al commit
+    "https://mglogistica.com.uy", //descomentar al commit
+    "https://backend.mglogistica.com.uy"
   ] ,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
