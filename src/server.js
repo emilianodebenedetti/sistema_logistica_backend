@@ -32,9 +32,9 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+/* app.options('*', cors(corsOptions)); */
 
-//app.options('/.*/', cors(corsOptions)); //prodcuccion
+app.options('/.*/', cors(corsOptions)); //prodcuccion
 /* app.options("", cors(corsOptions)); */ //desarrollo
 
 app.use(express.json()); 
