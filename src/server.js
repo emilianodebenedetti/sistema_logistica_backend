@@ -23,18 +23,18 @@ app.use((req, res, next) => {
 
 const corsOptions = { 
   origin: [
+    "https://mglogistica.com.uy",
     /* "http://localhost:4000",
     "http://localhost:5173", */
-    "https://mglogistica.com.uy/api", //descomentar al commit
-    "https://backend.mglogistica.com.uy"
   ] ,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
-app.options('/.*/', cors(corsOptions)); //prodcuccion
+//app.options('/.*/', cors(corsOptions)); //prodcuccion
 /* app.options("", cors(corsOptions)); */ //desarrollo
 
 app.use(express.json()); 
