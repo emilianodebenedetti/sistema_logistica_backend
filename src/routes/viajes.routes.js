@@ -9,12 +9,11 @@ import {
 import { verificarToken } from '../middleware/auth.middleware.js';
 
 const router = Router();
-
-// Crear un nuevo viaje
-// Listar todos los viajes
+// Listar todos los viajes por chofer
 router.get('/chofer', verificarToken, listarViajesChofer);//testeado chofer
+// Listar todos los viajes
 router.get('/', verificarToken, listarViajes);//testeado admin
-
+// Crear un nuevo viaje
 router.post('/', verificarToken, crearViaje);//testeado admin
 // Editar un viaje existente
 router.put('/:id', verificarToken, editarViaje);//testeado admin y chofer

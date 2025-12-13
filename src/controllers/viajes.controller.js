@@ -18,6 +18,7 @@ export const crearViaje = async (req, res) => {
     cliente_id,
     cliente_nombre,
     matricula,
+    fecha,
     n_orden,
     origen,
     destino,
@@ -51,13 +52,14 @@ export const crearViaje = async (req, res) => {
     // insertar y luego devolver fila con joins para nombres
     const insert = await pool.query(
       `INSERT INTO viajes 
-      (usuario_id, matricula, cliente_id, n_orden, origen, destino, contenedor, tipo_cont, cargado, observaciones) 
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) 
+      (usuario_id, matricula, cliente_id,fecha, n_orden, origen, destino, contenedor, tipo_cont, cargado, observaciones) 
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11) 
       RETURNING id`,
       [
         usuario_id,
         matricula || null,
         clienteId,
+        fecha,
         n_orden,
         origen,
         destino,
@@ -94,6 +96,7 @@ export const editarViaje = async (req, res) => {
     cliente_id,
     cliente_nombre,
     matricula,
+    fecha,
     n_orden,
     origen,
     destino,
@@ -120,10 +123,11 @@ export const editarViaje = async (req, res) => {
 
     const upd = await pool.query(
       `UPDATE viajes 
-       SET matricula=$1, cliente_id=$2, n_orden=$3, origen=$4, destino=$5, contenedor=$6, tipo_cont=$7, cargado=$8, observaciones=$9
-       WHERE id=$10 RETURNING id`,
+       SET matricula=$1, fecha=$2, cliente_id=$3, n_orden=$4, origen=$5, destino=$6, contenedor=$7, tipo_cont=$8, cargado=$9, observaciones=$10
+       WHERE id=$11 RETURNING id`,
       [
         matricula || null,
+        fecha,
         clienteId,
         n_orden,
         origen,
