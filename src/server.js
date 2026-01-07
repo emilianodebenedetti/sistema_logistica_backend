@@ -22,23 +22,9 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && corsOptions.origin.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
-    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
-  }
-  // respond to preflight requests quickly
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
-}); 
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); //desarrollo
 /* app.options('*', cors(corsOptions)); */
-app.options("", cors(corsOptions)); //desarrollo
 
 /* const corsOptions = {
   origin: [
@@ -55,7 +41,7 @@ app.use(cors(corsOptions)); */
 app.use(express.json()); 
 
 // Rutas
-app.use('/api/auth', authRoutes); //endpoint testeado y funcionando
+app.use('/api/auth', authRoutes); //endpoint testeado y funcionandos
 app.use('/api/usuarios', usuariosRoutes); //endpoint testeado y funcionando
 app.use('/api/clientes', clientesRoutes);//endpoint testeado y funcionando
 app.use('/api/viajes', viajesRoutes);//--endpoint testeado y funcionando
