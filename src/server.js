@@ -22,7 +22,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 /* const corsOptions = {
   origin: process.env.NODE_ENV === "production"
     ? ["https://mglogistica.com.uy"]
@@ -37,16 +36,34 @@ app.use((req, res, next) => {
 //app.options('/.*/', cors(corsOptions)); //prodcuccion
 /* app.options("", cors(corsOptions)); */ //desarrollo
 
-const corsOptions = { 
+
+const corsOptions = {
   origin: [
     "https://mglogistica.com.uy",
-     "http://localhost:4000",
-    "http://localhost:5173", 
-  ] ,
+    "http://localhost:4000",
+    "http://localhost:5173",
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
+// Fallback/manual CORS headers to ensure preflight responses in production
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && corsOptions.origin.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
+    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
+  }
+  // respond to preflight requests quickly
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
