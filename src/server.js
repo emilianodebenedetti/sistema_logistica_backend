@@ -7,7 +7,7 @@ import viajesRoutes from './routes/viajes.routes.js';
 import pool from "./config/db.js";
 import reportesRoutes from './routes/reportes.routes.js';
 
-/* import dotenv from 'dotenv'; */
+import dotenv from 'dotenv';
 /* 
 dotenv.config(); */
 
@@ -22,22 +22,22 @@ app.use((req, res, next) => {
   next();
 });
 
-/* const corsOptions = {
+const corsOptions = {
   origin: process.env.NODE_ENV === "production"
     ? ["https://mglogistica.com.uy"]
     : ["http://localhost:5173", "http://localhost:4000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-}; */
-//app.use(cors(corsOptions));
+};
+app.use(cors(corsOptions));
 /* app.options('*', cors(corsOptions)); */
 
 //app.options('/.*/', cors(corsOptions)); //prodcuccion
-/* app.options("", cors(corsOptions)); */ //desarrollo
+app.options("", cors(corsOptions)); //desarrollo
 
 
-const corsOptions = {
+/* const corsOptions = {
   origin: [
     "https://mglogistica.com.uy",
     "http://localhost:4000",
@@ -47,9 +47,15 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+app.use(cors(corsOptions)); */
+//app.options('/.*/', cors(corsOptions)); 
+
+
+
+/* app.options('*', cors(corsOptions)); */
 
 // Fallback/manual CORS headers to ensure preflight responses in production
-app.use((req, res, next) => {
+/* app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && corsOptions.origin.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
@@ -62,11 +68,7 @@ app.use((req, res, next) => {
     return res.sendStatus(204);
   }
   next();
-});
-
-app.use(cors(corsOptions));
-/* app.options('*', cors(corsOptions)); */
-app.options('/.*/', cors(corsOptions)); //produccion
+}); */
 
 
 app.use(express.json()); 
