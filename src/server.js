@@ -23,8 +23,8 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); //desarrollo
-/* app.options('*', cors(corsOptions)); */
+app.options('/.*/', cors(corsOptions));//prod
+//app.options('*', cors(corsOptions)); //dev
 
 /* const corsOptions = {
   origin: [
