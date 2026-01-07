@@ -21,6 +21,8 @@ app.use((req, res, next) => {
   console.log('➡️', req.method, req.path);
   next();
 });
+
+
 const corsOptions = {
   origin: process.env.NODE_ENV === "production"
     ? ["https://mglogistica.com.uy"]
@@ -30,9 +32,9 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+/* app.options('*', cors(corsOptions)); */
 
-//app.options('/.*/', cors(corsOptions)); //prodcuccion
+app.options('/.*/', cors(corsOptions)); //prodcuccion
 /* app.options("", cors(corsOptions)); */ //desarrollo
 
 /* const corsOptions = { 
