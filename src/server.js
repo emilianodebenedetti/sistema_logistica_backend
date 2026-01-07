@@ -33,8 +33,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 /* app.options('*', cors(corsOptions)); */
 
-//app.options('/.*/', cors(corsOptions)); //prodcuccion
-app.options("", cors(corsOptions)); //desarrollo
+app.options('/.*/', cors(corsOptions)); //prodcuccion
+//app.options("", cors(corsOptions)); //desarrollo
 
 
 /* const corsOptions = {
