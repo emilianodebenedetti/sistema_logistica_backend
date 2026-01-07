@@ -1,12 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
 import clientesRoutes from './routes/clientes.routes.js';
 import viajesRoutes from './routes/viajes.routes.js';
 import pool from "./config/db.js";
 import reportesRoutes from './routes/reportes.routes.js';
+
+/* import dotenv from 'dotenv'; */
 /* 
 dotenv.config(); */
 
@@ -29,8 +30,10 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(cors(corsOptions));
+/* app.use(cors(corsOptions)); */
 /* app.options('*', cors(corsOptions)); */
+app.options('/.*/', cors(corsOptions)); //prodcuccion
+/* app.options("", cors(corsOptions)); */ //desarrollo
 
 /* const corsOptions = { 
   origin: [
@@ -45,8 +48,6 @@ app.use(cors(corsOptions));
 app.use(cors(corsOptions)); */
 /* app.options('*', cors(corsOptions)); */
 
-//app.options('/.*/', cors(corsOptions)); //prodcuccion
-/* app.options("", cors(corsOptions)); */ //desarrollo
 
 app.use(express.json()); 
 
