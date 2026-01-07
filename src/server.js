@@ -7,7 +7,7 @@ import viajesRoutes from './routes/viajes.routes.js';
 import pool from "./config/db.js";
 import reportesRoutes from './routes/reportes.routes.js';
 
-import dotenv from 'dotenv';
+/* import dotenv from 'dotenv'; */
 /* 
 dotenv.config(); */
 
@@ -25,15 +25,15 @@ app.use((req, res, next) => {
 const corsOptions = {
   origin: process.env.NODE_ENV === "production"
     ? ["https://mglogistica.com.uy"]
-    : ["http://localhost:5173", "http://localhost:4000"],
-  credentials: true,
+    : ["http://localhost:5173"],
+ /*  credentials: true, */
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
 /* app.options('*', cors(corsOptions)); */
 
-app.options('/.*/', cors(corsOptions)); //prodcuccion
+//app.options('*', cors(corsOptions)); //prodcuccion
 //app.options("", cors(corsOptions)); //desarrollo
 
 
