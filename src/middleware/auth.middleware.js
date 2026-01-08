@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+/* import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config(); */
 
 export const verificarToken = (req, res, next) => {
   //extraemos token del encabezado Authorization
