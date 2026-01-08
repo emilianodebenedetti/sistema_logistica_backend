@@ -14,7 +14,7 @@ app.use((req, res, next) => {
   next();
 });
 
-/* const corsOptions = {
+const corsOptions = {
   origin: process.env.NODE_ENV === "production"
     ? ["https://mglogistica.com.uy"]
     : ["http://localhost:5173"],
@@ -22,11 +22,11 @@ app.use((req, res, next) => {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
-app.use(cors(corsOptions)); */
+app.use(cors(corsOptions));
 //app.options('/.*/', cors(corsOptions));//prod
 //app.options('*', cors(corsOptions)); //dev
 
-const corsOptions = {
+/* const corsOptions = {
   origin: [
     "https://mglogistica.com.uy",
     "http://localhost:5173",
@@ -35,8 +35,8 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
-app.use(cors(corsOptions));
-app.options('/.*/', cors(corsOptions)); 
+app.use(cors(corsOptions)); */
+//app.options('/.*/', cors(corsOptions)); 
 
 app.use(express.json()); 
 
