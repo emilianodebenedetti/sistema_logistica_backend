@@ -14,26 +14,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Allowed origins (add any other frontends you use)
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? ['https://mglogistica.com.uy']
-  : ['http://localhost:5173'];
-
 const corsOptions = {
-  origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps, curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy: origin not allowed'));
-  },
+  origin: process.env.NODE_ENV === "production"
+    ? ["https://mglogistica.com.uy"]
+    : ["http://localhost:5173"],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-
 app.use(cors(corsOptions));
-app.options('/.*/', cors(corsOptions)); 
+//app.options('/.*/', cors(corsOptions)); 
+app.options('', cors(corsOptions)); 
 
 /* const corsOptions = {
   origin: [
@@ -44,6 +36,7 @@ app.options('/.*/', cors(corsOptions));
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(corsOptions)); */
 //app.options('/.*/', cors(corsOptions)); 
 
