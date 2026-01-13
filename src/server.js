@@ -7,6 +7,7 @@ import viajesRoutes from './routes/viajes.routes.js';
 import pool from "./config/db.js";
 import reportesRoutes from './routes/reportes.routes.js';
 
+
 const app = express();
 
 app.use((req, res, next) => {
@@ -14,9 +15,20 @@ app.use((req, res, next) => {
   next();
 });
 
+/* const corsOptions = {
+  origin: process.env.NODE_ENV === "production"
+    ? ["https://mglogistica.com.uy", "https://www.mglogistica.com.uy"]
+    : ["http://localhost:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}; */
 const corsOptions = {
   origin: process.env.NODE_ENV === "production"
-    ? ["https://mglogistica.com.uy"]
+    ? [
+        "https://mglogistica.com.uy",
+        "https://www.mglogistica.com.uy"
+      ]
     : ["http://localhost:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -25,20 +37,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 //app.options('/.*/', cors(corsOptions)); 
-app.options('*', cors(corsOptions));
+app.options('', cors(corsOptions));// prod
 
-/* const corsOptions = {
-  origin: [
-    "https://mglogistica.com.uy",
-    "http://localhost:5173",
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions)); */
-//app.options('/.*/', cors(corsOptions)); 
 
 app.use(express.json()); 
 
