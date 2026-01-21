@@ -214,23 +214,34 @@ export const listarViajes = async (req, res) => {
   try {
     const { rol } = req.user;
     // parámetros opcionales de filtro
-    const { fecha, usuario_id, cliente_id } = req.query;
+    const { fecha, fechaDesde, fechaHasta, usuario_id, cliente_id } = req.query;
 
     if (rol !== "admin") {
       return res.status(403).json({ message: "Acceso denegado: solo administradores" });
     }
-
-    const fechaFiltro = fecha || new Date().toISOString().split("T")[0];
 
     // construir query dinámico
     let where = [];
     const params = [];
     let idx = 1;
     
-    if (fecha && fecha.trim() !== "") {
+    // Lógica de fechas: si hay fechaDesde Y fechaHasta, usa rango
+    // Si hay solo una o ninguna, usa fecha simple (por defecto hoy)
+    if (fechaDesde && fechaHasta) {
+      where.push(`DATE(v.fecha) >= $${idx++}`);
+      params.push(fechaDesde);
+      where.push(`DATE(v.fecha) <= $${idx++}`);
+      params.push(fechaHasta);
+    } else if (fecha && fecha.trim() !== "") {
       where.push(`DATE(v.fecha) = $${idx++}`);
       params.push(fecha);
+    } else {
+      // Si no hay filtro de fecha, mostrar solo hoy
+      const today = new Date().toISOString().split("T")[0];
+      where.push(`DATE(v.fecha) = $${idx++}`);
+      params.push(today);
     }
+
     if (usuario_id) {
       where.push(`v.usuario_id = $${idx++}`);
       params.push(Number(usuario_id));
