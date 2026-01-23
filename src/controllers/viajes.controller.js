@@ -1,16 +1,33 @@
 import pool from '../config/db.js';
 
-// helper: buscar o crear cliente por nombre
+// helper: buscar o crear cliente por nombre (con manejo de race condition)
 async function getOrCreateClienteId(nombre) {
   if (!nombre) return null;
   const trimmed = String(nombre).trim();
   if (!trimmed) return null;
 
-  const q = await pool.query('SELECT id FROM clientes WHERE nombre = $1', [trimmed]);
-  if (q.rows.length) return q.rows[0].id;
+  const client = await pool.connect();
+  try {
+    // Usar transacción para evitar race condition
+    await client.query('BEGIN');
+    
+    // Buscar con lock (SELECT FOR UPDATE) para evitar duplicados
+    const q = await client.query('SELECT id FROM clientes WHERE nombre = $1 FOR UPDATE', [trimmed]);
+    if (q.rows.length) {
+      await client.query('COMMIT');
+      return q.rows[0].id;
+    }
 
-  const ins = await pool.query('INSERT INTO clientes (nombre) VALUES ($1) RETURNING id', [trimmed]);
-  return ins.rows[0].id;
+    // Si no existe, insertar
+    const ins = await client.query('INSERT INTO clientes (nombre) VALUES ($1) RETURNING id', [trimmed]);
+    await client.query('COMMIT');
+    return ins.rows[0].id;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export const crearViaje = async (req, res) => {
@@ -34,13 +51,20 @@ export const crearViaje = async (req, res) => {
     return res.status(400).json({ message: "Faltan campos requeridos: n_orden/origen/destino" });
   }
 
-  let clienteId = null;
+  const client = await pool.connect();
   try {
+    // Usar transacción para garantizar atomicidad
+    await client.query('BEGIN');
+
+    let clienteId = null;
     if (cliente_nombre) {
       clienteId = await getOrCreateClienteId(cliente_nombre);
     } else if (cliente_id !== undefined && cliente_id !== "" && cliente_id !== null) {
       const parsed = Number(cliente_id);
-      if (Number.isNaN(parsed)) return res.status(400).json({ message: "cliente_id inválido" });
+      if (Number.isNaN(parsed)) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: "cliente_id inválido" });
+      }
       clienteId = parsed;
     } else {
       clienteId = null;
@@ -49,10 +73,24 @@ export const crearViaje = async (req, res) => {
     const cont = contenedor === "" || contenedor == null ? null : String(contenedor).trim();
     const cargadoBool = cargado === true || cargado === "true" || cargado === 1 || cargado === "1";
 
-    // insertar y luego devolver fila con joins para nombres
-    const insert = await pool.query(
+    // Validación: evitar duplicados de n_orden para el mismo usuario en la misma fecha
+    const duplicateCheck = await client.query(
+      `SELECT id FROM viajes 
+       WHERE usuario_id = $1 AND n_orden = $2 AND DATE(fecha) = DATE($3)`,
+      [usuario_id, n_orden, fecha]
+    );
+    
+    if (duplicateCheck.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ 
+        message: "Ya existe un viaje con este número de orden en esta fecha para este usuario" 
+      });
+    }
+
+    // insertar viaje dentro de la transacción
+    const insert = await client.query(
       `INSERT INTO viajes 
-      (usuario_id, matricula, cliente_id,fecha, n_orden, origen, destino, contenedor, tipo_cont, cargado, observaciones) 
+      (usuario_id, matricula, cliente_id, fecha, n_orden, origen, destino, contenedor, tipo_cont, cargado, observaciones) 
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11) 
       RETURNING id`,
       [
@@ -71,6 +109,9 @@ export const crearViaje = async (req, res) => {
     );
 
     const newId = insert.rows[0].id;
+    await client.query('COMMIT');
+
+    // Consulta final fuera de la transacción
     const q = await pool.query(
       `SELECT v.*, u.nombre AS usuario_nombre, c.nombre AS cliente_nombre
        FROM viajes v
@@ -82,11 +123,22 @@ export const crearViaje = async (req, res) => {
 
     res.status(201).json(q.rows[0]);
   } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error("Error en ROLLBACK:", rollbackErr);
+    }
+    
     if (err && (err.constraint === "viajes_contenedor_check" || (err.message && err.message.includes("viajes_contenedor_check")))) {
       return res.status(400).json({ message: "Contenedor inválido: formato/valor no permitido" });
     }
+    if (err.constraint === "viajes_pkey" || err.message.includes("duplicate key")) {
+      return res.status(409).json({ message: "El viaje ya existe o hay un conflicto de sincronización" });
+    }
     console.error("crearViaje error:", err && err.stack ? err.stack : err);
     res.status(500).json({ message: "Error al crear viaje", error: err.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -106,13 +158,19 @@ export const editarViaje = async (req, res) => {
     observaciones,
   } = req.body;
 
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
+
     let clienteId = null;
     if (cliente_nombre) {
       clienteId = await getOrCreateClienteId(cliente_nombre);
     } else if (cliente_id !== undefined && cliente_id !== "" && cliente_id !== null) {
       const parsed = Number(cliente_id);
-      if (Number.isNaN(parsed)) return res.status(400).json({ message: "cliente_id inválido" });
+      if (Number.isNaN(parsed)) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: "cliente_id inválido" });
+      }
       clienteId = parsed;
     } else {
       clienteId = null;
@@ -121,7 +179,21 @@ export const editarViaje = async (req, res) => {
     const cont = contenedor === "" || contenedor == null ? null : String(contenedor).trim();
     const cargadoBool = cargado === true || cargado === "true" || cargado === 1 || cargado === "1";
 
-    const upd = await pool.query(
+    // Validación: evitar duplicados con otro viaje (exceptuando el actual)
+    const duplicateCheck = await client.query(
+      `SELECT id FROM viajes 
+       WHERE n_orden = $1 AND DATE(fecha) = DATE($2) AND id != $3`,
+      [n_orden, fecha, id]
+    );
+    
+    if (duplicateCheck.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ 
+        message: "Ya existe otro viaje con este número de orden en esta fecha" 
+      });
+    }
+
+    const upd = await client.query(
       `UPDATE viajes 
        SET matricula=$1, fecha=$2, cliente_id=$3, n_orden=$4, origen=$5, destino=$6, contenedor=$7, tipo_cont=$8, cargado=$9, observaciones=$10
        WHERE id=$11 RETURNING id`,
@@ -140,7 +212,12 @@ export const editarViaje = async (req, res) => {
       ]
     );
 
-    if (upd.rows.length === 0) return res.status(404).json({ error: "Viaje no encontrado" });
+    if (upd.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: "Viaje no encontrado" });
+    }
+
+    await client.query('COMMIT');
 
     const q = await pool.query(
       `SELECT v.*, u.nombre AS usuario_nombre, c.nombre AS cliente_nombre
@@ -153,8 +230,15 @@ export const editarViaje = async (req, res) => {
 
     res.json(q.rows[0]);
   } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error("Error en ROLLBACK:", rollbackErr);
+    }
     console.error("editarViaje error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Error al actualizar viaje", details: err.message });
+  } finally {
+    client.release();
   }
 };
 
