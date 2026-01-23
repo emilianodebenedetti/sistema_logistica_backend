@@ -1,32 +1,46 @@
 import pool from '../config/db.js';
 
-// helper: buscar o crear cliente por nombre (con manejo de race condition)
-async function getOrCreateClienteId(nombre) {
+// helper: buscar o crear cliente por nombre (recibe client para evitar transacciones anidadas)
+async function getOrCreateClienteId(nombre, client = null) {
   if (!nombre) return null;
   const trimmed = String(nombre).trim();
   if (!trimmed) return null;
 
-  const client = await pool.connect();
+  const isExternalClient = !!client;
+  if (!client) {
+    client = await pool.connect();
+  }
+
   try {
-    // Usar transacción para evitar race condition
-    await client.query('BEGIN');
+    // Si es un cliente externo (dentro de una transacción), NO llamamos a BEGIN/COMMIT
+    if (!isExternalClient) {
+      await client.query('BEGIN');
+    }
     
     // Buscar con lock (SELECT FOR UPDATE) para evitar duplicados
     const q = await client.query('SELECT id FROM clientes WHERE nombre = $1 FOR UPDATE', [trimmed]);
     if (q.rows.length) {
-      await client.query('COMMIT');
+      if (!isExternalClient) {
+        await client.query('COMMIT');
+      }
       return q.rows[0].id;
     }
 
     // Si no existe, insertar
     const ins = await client.query('INSERT INTO clientes (nombre) VALUES ($1) RETURNING id', [trimmed]);
-    await client.query('COMMIT');
+    if (!isExternalClient) {
+      await client.query('COMMIT');
+    }
     return ins.rows[0].id;
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (!isExternalClient) {
+      await client.query('ROLLBACK');
+    }
     throw err;
   } finally {
-    client.release();
+    if (!isExternalClient) {
+      client.release();
+    }
   }
 }
 
@@ -58,7 +72,8 @@ export const crearViaje = async (req, res) => {
 
     let clienteId = null;
     if (cliente_nombre) {
-      clienteId = await getOrCreateClienteId(cliente_nombre);
+      // Pasar el client para evitar transacciones anidadas
+      clienteId = await getOrCreateClienteId(cliente_nombre, client);
     } else if (cliente_id !== undefined && cliente_id !== "" && cliente_id !== null) {
       const parsed = Number(cliente_id);
       if (Number.isNaN(parsed)) {
@@ -164,7 +179,8 @@ export const editarViaje = async (req, res) => {
 
     let clienteId = null;
     if (cliente_nombre) {
-      clienteId = await getOrCreateClienteId(cliente_nombre);
+      // Pasar el client para evitar transacciones anidadas
+      clienteId = await getOrCreateClienteId(cliente_nombre, client);
     } else if (cliente_id !== undefined && cliente_id !== "" && cliente_id !== null) {
       const parsed = Number(cliente_id);
       if (Number.isNaN(parsed)) {
