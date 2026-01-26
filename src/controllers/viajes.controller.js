@@ -88,20 +88,6 @@ export const crearViaje = async (req, res) => {
     const cont = contenedor === "" || contenedor == null ? null : String(contenedor).trim();
     const cargadoBool = cargado === true || cargado === "true" || cargado === 1 || cargado === "1";
 
-    // Validación: evitar duplicados de n_orden para el mismo usuario en la misma fecha
-    const duplicateCheck = await client.query(
-      `SELECT id FROM viajes 
-       WHERE usuario_id = $1 AND n_orden = $2 AND DATE(fecha) = DATE($3)`,
-      [usuario_id, n_orden, fecha]
-    );
-    
-    if (duplicateCheck.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return res.status(409).json({ 
-        message: "Ya existe un viaje con este número de orden en esta fecha para este usuario" 
-      });
-    }
-
     // insertar viaje dentro de la transacción
     const insert = await client.query(
       `INSERT INTO viajes 
@@ -147,9 +133,6 @@ export const crearViaje = async (req, res) => {
     if (err && (err.constraint === "viajes_contenedor_check" || (err.message && err.message.includes("viajes_contenedor_check")))) {
       return res.status(400).json({ message: "Contenedor inválido: formato/valor no permitido" });
     }
-    if (err.constraint === "viajes_pkey" || err.message.includes("duplicate key")) {
-      return res.status(409).json({ message: "El viaje ya existe o hay un conflicto de sincronización" });
-    }
     console.error("crearViaje error:", err && err.stack ? err.stack : err);
     res.status(500).json({ message: "Error al crear viaje", error: err.message });
   } finally {
@@ -194,20 +177,6 @@ export const editarViaje = async (req, res) => {
 
     const cont = contenedor === "" || contenedor == null ? null : String(contenedor).trim();
     const cargadoBool = cargado === true || cargado === "true" || cargado === 1 || cargado === "1";
-
-    // Validación: evitar duplicados con otro viaje (exceptuando el actual)
-    const duplicateCheck = await client.query(
-      `SELECT id FROM viajes 
-       WHERE n_orden = $1 AND DATE(fecha) = DATE($2) AND id != $3`,
-      [n_orden, fecha, id]
-    );
-    
-    if (duplicateCheck.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return res.status(409).json({ 
-        message: "Ya existe otro viaje con este número de orden en esta fecha" 
-      });
-    }
 
     const upd = await client.query(
       `UPDATE viajes 
