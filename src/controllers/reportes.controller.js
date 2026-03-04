@@ -162,13 +162,21 @@ export const exportarExcelGeneral = async (req, res) => {
 
 export const exportarViajesExcel = async (req, res) => {
   try {
-    const { fecha, usuario_id, cliente_id } = req.query;
+    // allow both single-date and range filters, plus chofer/cliente
+    const { fecha, fechaDesde, fechaHasta, usuario_id, cliente_id } = req.query;
 
-    const fechaFiltro = fecha || new Date().toISOString().split("T")[0];
+    // build where clauses dynamically to mirror frontend fetchList logic
+    const where = [];
+    const params = [];
+    let idx = 1;
 
-    let where = [`DATE(v.fecha) = $1`];
-    const params = [fechaFiltro];
-    let idx = 2;
+    if (fechaDesde && fechaHasta) {
+      where.push(`DATE(v.fecha) BETWEEN $${idx++} AND $${idx++}`);
+      params.push(fechaDesde, fechaHasta);
+    } else if (fecha) {
+      where.push(`DATE(v.fecha) = $${idx++}`);
+      params.push(fecha);
+    }
 
     if (usuario_id) {
       where.push(`v.usuario_id = $${idx++}`);
@@ -220,7 +228,17 @@ export const exportarViajesExcel = async (req, res) => {
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader("Content-Disposition", `attachment; filename="viajes_${fechaFiltro}.xlsx"`);
+    // determine sensible filename based on provided filters
+    let filename = "viajes";
+    if (fechaDesde && fechaHasta) {
+      filename += `_${fechaDesde}_a_${fechaHasta}`;
+    } else if (fecha) {
+      filename += `_${fecha}`;
+    } else {
+      filename += `_todos`;
+    }
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}.xlsx"`);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     return res.send(Buffer.from(buffer));
   } catch (err) {
