@@ -200,6 +200,19 @@ export const exportarViajesExcel = async (req, res) => {
 
     const result = await pool.query(query, params);
 
+    // if there are no rows we don't want to return a completely blank file; send a 404 so
+    // the frontend can inform the user instead of downloading an empty workbook.
+    if (!result.rows || result.rows.length === 0) {
+      console.log("📁 exportarViajesExcel: no se encontraron viajes para filtros", {
+        fecha,
+        fechaDesde,
+        fechaHasta,
+        usuario_id,
+        cliente_id,
+      });
+      return res.status(404).json({ message: "No hay viajes para esos filtros" });
+    }
+
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Viajes");
 
